@@ -2,6 +2,7 @@ import sys
 from enum import Enum
 from fcntl import ioctl
 from io import BufferedWriter
+from os import getenv, path
 from signal import SIGWINCH, signal
 from struct import unpack
 from termios import TIOCGWINSZ
@@ -14,6 +15,64 @@ if TYPE_CHECKING:
 
 
 SINK = open("/dev/null", "r+")
+
+
+def shorten_file_path(max_length: int, file_path: Text):
+    """
+    Applies several strategies to try and condense the file path
+
+    Notes
+    -----
+    The strategies are the following:
+
+    1. If the path starts with $HOME, replace the beginning with ~/
+    2. Remove as many parent dirs as needed to fit
+    3. If only the file name is left, abbreviate it. However, try to keep the
+       extension visible in doing so.
+
+    I'm guessing that on Windows this would be kind of broken but for now there
+    is no Windows compatibility.
+
+    Parameters
+    ----------
+    max_length
+        The output value will not be longer than this
+
+    file_path
+        The file path you want to shorten
+
+    Returns
+    -------
+    A shorted file path. By example "/home/foo/bar.txt" becomes "~/bar.txt"
+    (if your home is "/home/foo").
+    """
+
+    home = getenv("HOME", None)
+
+    if home:
+        home = home.rstrip("/")
+
+        if file_path.startswith(home):
+            file_path = "~" + file_path[len(home) :]
+
+    if len(file_path) <= max_length:
+        return file_path
+
+    parts = file_path.split("/")
+
+    for i in range(1, len(parts) - 1):
+        file_path = path.join(*parts[i:])
+
+        if len(file_path) <= max_length:
+            return file_path
+
+    name, ext = path.splitext(file_path)
+    max_name_length = max_length - len(ext)
+
+    if max_name_length < 5:
+        return f"{file_path[0:max_length-3]}..."
+    else:
+        return f"{name[0:max_name_length-2]}..{ext}"
 
 
 class Output(Enum):
@@ -241,6 +300,9 @@ class Progress:
     Displays the progress of the files, based on tqdm but with custom rendering
     """
 
+    MIN_FILE_WIDTH = 10
+    FILE_WIDTH = 0.25
+
     def __init__(self, output: Output):
         self.box = BottomBox(self._render, output)
         self.cnt = 0
@@ -262,9 +324,12 @@ class Progress:
 
         out = []
 
+        file_width = int(max([self.MIN_FILE_WIDTH, self.FILE_WIDTH * width]))
+
         for file, progress in self.files.items():
             progress.tqdm.ncols = width
             progress.tqdm.update(progress.info.position - progress.tqdm.n)
+            progress.tqdm.desc = shorten_file_path(file_width, file)
             out.append(repr(progress.tqdm))
 
         return out
