@@ -5,6 +5,7 @@ from io import BufferedWriter
 from struct import unpack
 from termios import TIOCGWINSZ
 from typing import TYPE_CHECKING, Callable, Dict, NamedTuple, Sequence, Text, TextIO
+from signal import signal, SIGWINCH
 
 from tqdm import tqdm
 
@@ -97,6 +98,8 @@ class BottomBox:
         self.renderer = renderer
         # noinspection PyTypeChecker
         self.buffer = BufferedWriter(self.stdout.buffer, buffer_size=1_000_000)
+
+        signal(SIGWINCH, lambda _, __: self.update())
 
     def _write(self, s: bytes):
         """
