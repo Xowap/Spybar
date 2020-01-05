@@ -1,0 +1,8 @@
+*.pyc
+*.swp
+*.un~
+.pytest_cache
+.idea
+dist
+*.egg-info
+/docs/build/
