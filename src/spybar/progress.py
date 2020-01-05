@@ -2,10 +2,10 @@ import sys
 from enum import Enum
 from fcntl import ioctl
 from io import BufferedWriter
+from signal import SIGWINCH, signal
 from struct import unpack
 from termios import TIOCGWINSZ
 from typing import TYPE_CHECKING, Callable, Dict, NamedTuple, Sequence, Text, TextIO
-from signal import signal, SIGWINCH
 
 from tqdm import tqdm
 

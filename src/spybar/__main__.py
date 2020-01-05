@@ -26,6 +26,15 @@ def parse_args(argv: Argv = None) -> Namespace:
     )
 
     parser.add_argument(
+        "-a",
+        "--attach",
+        type=int,
+        help=(
+            "Instead of starting a process, attaches to an already-running "
+            "process. Specify the PID here."
+        ),
+    )
+    parser.add_argument(
         "-p",
         "--refresh-period",
         type=float,
@@ -59,7 +68,12 @@ def main(argv: Argv = None):
 
     args = parse_args(argv)
 
-    sp = SpyProcess(args.command_arg, args.refresh_period, args.output)
+    sp = SpyProcess(
+        args=args.command_arg,
+        period=args.refresh_period,
+        output=args.output,
+        attach=args.attach,
+    )
     sp.start()
 
     try:
@@ -71,7 +85,8 @@ def main(argv: Argv = None):
     finally:
         ret = sp.return_code()
 
-    exit(ret)
+    if ret is not None:
+        exit(ret)
 
 
 def run():

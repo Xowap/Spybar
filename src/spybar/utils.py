@@ -4,7 +4,7 @@ from threading import Thread
 from time import sleep
 from typing import Callable, List, NamedTuple, Optional, Sequence, Text
 
-from psutil import AccessDenied, NoSuchProcess, Popen
+from psutil import AccessDenied, NoSuchProcess, Popen, Process
 from psutil._pslinux import popenfile
 
 from .progress import Output, Progress
@@ -53,8 +53,11 @@ class SpyProcess:
     an update every second and close instantly when the process is done.
     """
 
-    def __init__(self, args: Sequence[Text], period: float, output: Output):
+    def __init__(
+        self, args: Sequence[Text], period: float, output: Output, attach=Optional[int]
+    ):
         self.args = args
+        self.attach = attach
         self.proc: Optional[Popen] = None
         self.files_cache = {}
         self.display_ticks = Queue()
@@ -67,10 +70,14 @@ class SpyProcess:
 
     def start(self):
         """
-        Starts the child process
+        If a PID was supplied to attach in the CLI options then use it.
+        Otherwise use the provided arguments to start the command.
         """
 
-        self.proc = Popen(self.args)
+        if self.attach is None:
+            self.proc = Popen(self.args)
+        else:
+            self.proc = Process(self.attach)
 
     def open_files(self) -> List[popenfile]:
         """
