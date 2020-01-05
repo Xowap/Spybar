@@ -176,7 +176,7 @@ class BottomBox:
         for _ in range(self.last_height + 1, new_height):
             self._write(b"\n")
 
-        for _ in range(self.last_height, new_height):
+        for _ in range(self.last_height + 1, new_height):
             self._move_cursor_up()
 
         self.last_height = new_height
