@@ -116,11 +116,14 @@ class SpyProcess:
                 if f.path not in self.files_cache:
                     self.files_cache[f.path] = path.getsize(f.path)
 
-                out.append(
-                    FileInfo(
-                        path=f.path, size=self.files_cache[f.path], position=f.position
+                if hasattr(f, "position"):
+                    out.append(
+                        FileInfo(
+                            path=f.path,
+                            size=self.files_cache[f.path],
+                            position=f.position,
+                        )
                     )
-                )
         except (AccessDenied, NoSuchProcess):
             pass
 
