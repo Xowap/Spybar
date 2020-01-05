@@ -7,7 +7,7 @@ from typing import Callable, List, NamedTuple, Optional, Sequence, Text
 from psutil import AccessDenied, NoSuchProcess, Popen
 from psutil._pslinux import popenfile
 
-from .progress import Progress
+from .progress import Output, Progress
 
 Argv = Optional[Sequence[Text]]
 
@@ -53,7 +53,7 @@ class SpyProcess:
     an update every second and close instantly when the process is done.
     """
 
-    def __init__(self, args: Sequence[Text], period: float):
+    def __init__(self, args: Sequence[Text], period: float, output: Output):
         self.args = args
         self.proc: Optional[Popen] = None
         self.files_cache = {}
@@ -62,7 +62,7 @@ class SpyProcess:
         self.ticks_thread = Thread(
             target=self.generate_ticks, args=(period,), daemon=True
         )
-        self.progress = Progress()
+        self.progress = Progress(output)
         self.counters = {}
 
     def start(self):

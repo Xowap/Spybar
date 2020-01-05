@@ -1,6 +1,7 @@
 import signal
 from argparse import REMAINDER, ArgumentParser, Namespace
 
+from .progress import Output
 from .utils import Argv, SpyProcess, run_main
 
 
@@ -34,6 +35,13 @@ def parse_args(argv: Argv = None) -> Namespace:
         ),
         default="1",
     )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Output,
+        help='Output the bar to "stderr" or "stdout" (default: "stderr")',
+        default=Output.stderr,
+    )
     parser.add_argument("command_arg", nargs=REMAINDER)
 
     return parser.parse_args(argv)
@@ -51,7 +59,7 @@ def main(argv: Argv = None):
 
     args = parse_args(argv)
 
-    sp = SpyProcess(args.command_arg, args.refresh_period)
+    sp = SpyProcess(args.command_arg, args.refresh_period, args.output)
     sp.start()
 
     try:

@@ -1,7 +1,8 @@
+import sys
+from enum import Enum
 from fcntl import ioctl
 from io import BufferedWriter
 from struct import unpack
-from sys import stderr
 from termios import TIOCGWINSZ
 from typing import TYPE_CHECKING, Callable, Dict, NamedTuple, Sequence, Text, TextIO
 
@@ -12,6 +13,16 @@ if TYPE_CHECKING:
 
 
 SINK = open("/dev/null", "r+")
+
+
+class Output(Enum):
+    """
+    Used to restrict potential values of output files from the argument
+    parsing.
+    """
+
+    stderr = "stderr"
+    stdout = "stdout"
 
 
 class TerminalSize(NamedTuple):
@@ -71,7 +82,7 @@ class BottomBox:
     all characters are written at the same time and avoid messing things up.
     """
 
-    def __init__(self, renderer: Callable[[int], Sequence[Text]]):
+    def __init__(self, renderer: Callable[[int], Sequence[Text]], output: Output):
         """
         Constructor.
 
@@ -82,7 +93,7 @@ class BottomBox:
         """
 
         self.last_height = 0
-        self.stdout: TextIO = stderr
+        self.stdout: TextIO = getattr(sys, output.value)
         self.renderer = renderer
         # noinspection PyTypeChecker
         self.buffer = BufferedWriter(self.stdout.buffer, buffer_size=1_000_000)
@@ -227,8 +238,8 @@ class Progress:
     Displays the progress of the files, based on tqdm but with custom rendering
     """
 
-    def __init__(self):
-        self.box = BottomBox(self._render)
+    def __init__(self, output: Output):
+        self.box = BottomBox(self._render, output)
         self.cnt = 0
         self.files: Dict[Text, FileProgress] = {}
 
