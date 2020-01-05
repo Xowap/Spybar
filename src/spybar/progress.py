@@ -246,13 +246,20 @@ class BottomBox:
         in order for the bottom box to be drawn.
         """
 
-        for _ in range(self.last_height + 1, new_height):
+        for _ in range(self.last_height, new_height):
             self._write(b"\n")
 
-        for _ in range(self.last_height + 1, new_height):
+        for _ in range(self.last_height, new_height):
             self._move_cursor_up()
 
         self.last_height = new_height
+
+    def _clear_screen_below_cursor(self) -> None:
+        """
+        Clears everything below the cursor using dedicated ANSI code
+        """
+
+        self._write(b"\033[J")
 
     def update(self) -> None:
         """
@@ -283,15 +290,10 @@ class BottomBox:
         """
 
         size = self._get_terminal_size()
-        start = size.rows - self.last_height + 1
         self._save_cursor()
-
-        for i in range(0, self.last_height):
-            self._move_cursor_to_row(start + i)
-            self._clear_row()
-
         self._set_scroll_region(size.rows)
         self._restore_cursor()
+        self._clear_screen_below_cursor()
         self._flush()
 
 
