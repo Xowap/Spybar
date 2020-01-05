@@ -1,5 +1,6 @@
 from os import path
 from queue import Queue
+from sys import stderr
 from threading import Thread
 from time import sleep
 from typing import Callable, List, NamedTuple, Optional, Sequence, Text
@@ -75,9 +76,20 @@ class SpyProcess:
         """
 
         if self.attach is None:
-            self.proc = Popen(self.args)
+            try:
+                self.proc = Popen(self.args)
+            except FileNotFoundError:
+                stderr.write(f'Could not find command "{self.args[0]}"\n')
+                exit(1)
         else:
-            self.proc = Process(self.attach)
+            try:
+                self.proc = Process(self.attach)
+            except (AccessDenied, NoSuchProcess):
+                stderr.write(
+                    f"Could not attach process {self.attach}. Does it exist? "
+                    f"Do you have the rights?\n"
+                )
+                exit(1)
 
     def open_files(self) -> List[popenfile]:
         """
@@ -184,3 +196,26 @@ class SpyProcess:
             self.proc.send_signal(sig)
         except NoSuchProcess:
             pass
+
+
+def positive_int(x) -> int:
+    """
+    Checks that the provided input is a positive integer. Used for PID
+    validation in the CLI arguments.
+
+    Parameters
+    ----------
+    x
+        A positive integer
+
+    Returns
+    -------
+
+    """
+
+    x = int(x)
+
+    if x < 0:
+        raise ValueError("A positive integer is expected")
+
+    return x

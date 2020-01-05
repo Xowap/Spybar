@@ -2,7 +2,7 @@ import signal
 from argparse import REMAINDER, ArgumentParser, Namespace
 
 from .progress import Output
-from .utils import Argv, SpyProcess, run_main
+from .utils import Argv, SpyProcess, positive_int, run_main
 
 
 def parse_args(argv: Argv = None) -> Namespace:
@@ -28,7 +28,7 @@ def parse_args(argv: Argv = None) -> Namespace:
     parser.add_argument(
         "-a",
         "--attach",
-        type=int,
+        type=positive_int,
         help=(
             "Instead of starting a process, attaches to an already-running "
             "process. Specify the PID here."
@@ -51,9 +51,29 @@ def parse_args(argv: Argv = None) -> Namespace:
         help='Output the bar to "stderr" or "stdout" (default: "stderr")',
         default=Output.stderr,
     )
-    parser.add_argument("command_arg", nargs=REMAINDER)
+    parser.add_argument(
+        "command_arg",
+        nargs=REMAINDER,
+        help=(
+            "After the options, just type your regular command, by example "
+            '"spybar gzip big_dump.sql"'
+        ),
+    )
 
-    return parser.parse_args(argv)
+    ns = parser.parse_args(argv)
+
+    if ns.attach is None and not ns.command_arg:
+        parser.error(
+            "You need to specify at least a PID to attach (-a option) or a "
+            'command to run. By example "spybar gzip bigdump.sql"'
+        )
+    elif ns.attach is not None and ns.command_arg:
+        parser.error(
+            "You cannot specify a PID to attach and a "
+            "command to run at the same time"
+        )
+
+    return ns
 
 
 def main(argv: Argv = None):
