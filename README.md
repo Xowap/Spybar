@@ -6,9 +6,7 @@ traditional utilities which don't display their progress.
 
 Simply prefix any command with `spybar`.
 
-```
-spybar gzip big_dump.sql
-```
+![`spybar gzip that_big_file.dat`](./doc/spybar_demo.gif)
 
 Or, if the process is already running, attach using its PID. Suppose that you
 want to attach to process 42:
@@ -65,6 +63,7 @@ I would like to thank:
 - The `tqdm` maintainers
 - The `poetry` maintainers
 - The `pytest` maintainers
+- The `apt` maintainers from whom I stole the VT100 progress bar logic
 - All open-source contributors thanks to whom this software was easy to write
 
 ## License
