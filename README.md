@@ -15,6 +15,22 @@ want to attach to process 42:
 spybar -a 42
 ```
 
+## Installation
+
+It's a regular Python package named `spybar`.
+
+You could either install it with pip
+
+```
+pip install --user spybar 
+```
+
+Or you could also run it using pipx
+
+```
+pipx run spybar
+```
+
 ## FAQ
 
 ### Can you pipe it?
